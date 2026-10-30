@@ -52,8 +52,8 @@ Open <http://localhost:5173>. The API defaults to <http://localhost:3000>.
 ### 3. Run tests
 
 ```bash
-cd backend && bin/rails test
-cd frontend && npm test
+(cd backend && bin/rails test)
+(cd frontend && npm test)
 ```
 
 ### 4. Seed data
