@@ -39,6 +39,14 @@ class Api::V1::EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "EMP98765", response.parsed_body["employee_code"]
   end
 
+  test "employee code remains immutable after creation" do
+    employee = create_employee
+    patch "/api/v1/employees/#{employee.id}", params: { employee: { employee_code: "EMP99999", job_title: "Staff Engineer" } }, headers: auth_headers
+    assert_response :success
+    assert_equal "EMP12345", response.parsed_body["employee_code"]
+    assert_equal "Staff Engineer", employee.reload.job_title
+  end
+
   test "caps page size at 100" do
     get "/api/v1/employees", params: { per_page: 500 }, headers: auth_headers
     assert_response :success

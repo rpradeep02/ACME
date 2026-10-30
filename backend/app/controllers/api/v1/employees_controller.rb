@@ -51,7 +51,7 @@ module Api
       def update
         employee = Employee.find(params[:id])
         Employee.transaction do
-          employee.update!(employee_params)
+          employee.update!(employee_update_params)
           audit!("employee_updated", employee, changed_fields: employee.previous_changes.keys - %w[updated_at])
         end
         render json: serialize_employee(employee.reload)
@@ -64,6 +64,11 @@ module Api
       def employee_params
         params.require(:employee).permit(:employee_code, :first_name, :last_name, :email,
                                          :country_code, :department, :job_title, :status, :hire_date)
+      end
+
+      def employee_update_params
+        params.require(:employee).permit(:first_name, :last_name, :email, :country_code,
+                                         :department, :job_title, :status, :hire_date)
       end
 
       def salary_params
