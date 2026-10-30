@@ -89,6 +89,7 @@ The repository is ready to deploy but is not deployed from this workspace. See [
 - [`docs/ai-usage.md`](docs/ai-usage.md) — AI-assisted workflow and verification.
 - [`docs/performance-security.md`](docs/performance-security.md) — security and scale considerations.
 - [`docs/demo-script.md`](docs/demo-script.md) — 3–5 minute walkthrough outline.
+- [`docs/verification.md`](docs/verification.md) — exact checks completed and environment blockers.
 
 ## Important assessment caveats
 
