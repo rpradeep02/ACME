@@ -24,7 +24,6 @@ Prerequisites: Ruby 3.2+, Bundler, Node 20+, npm.
 ```bash
 cd backend
 bundle install
-cp .env.example .env # optional; the seed has a development-only default password
 bin/rails db:prepare
 bin/rails db:seed
 bin/rails server -p 3000
@@ -35,7 +34,7 @@ Demo credentials (development only):
 - Email: `hr.manager@acme.example`
 - Password: `ChangeMe123!`
 
-Set `SEED_ADMIN_PASSWORD` before seeding to use a different password. Never use the development default in a deployed environment.
+The backend does not auto-load `.env` files. Set `SEED_ADMIN_PASSWORD` in your shell before seeding to use a different password. Never use the development default in a deployed environment.
 
 ### 2. Start the React app
 

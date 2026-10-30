@@ -50,7 +50,7 @@ export default function Employees() {
   function clearFilters() { setQuery(""); setCountry(""); setDepartment(""); setStatus(""); setCurrency(""); setPage(1); }
 
   return <div className="page-content">
-    <div className="page-intro"><div><p className="eyebrow">PEOPLE DIRECTORY</p><h1>Employees</h1><p className="muted">Manage employee details and annual compensation.</p></div><button className="primary-button" onClick={() => setShowCreate(true)}>＋ Add employee</button></div>
+    <div className="page-intro"><div><p className="eyebrow">PEOPLE DIRECTORY</p><h1>Employees</h1><p className="muted">Manage employee details and annual compensation.</p></div><button className="primary-button" onClick={() => { setError(""); setShowCreate(true); }}>＋ Add employee</button></div>
     <section className="panel directory-panel">
       <div className="filter-toolbar"><label className="search-box"><span>⌕</span><input aria-label="Search employees" placeholder="Search name, email or employee ID" value={query} onChange={e => { setQuery(e.target.value); setPage(1); }} /></label>
         <input aria-label="Filter by country" placeholder="Country code" maxLength={2} value={country} onChange={e => { setCountry(e.target.value.toUpperCase()); setPage(1); }} />
@@ -78,6 +78,7 @@ export default function Employees() {
         <label>Annual salary<input type="number" min="1" step="0.01" value={opening.annual_salary} onChange={e => setOpening({ ...opening, annual_salary: e.target.value })} required /></label>
         <div className="form-grid"><label>Currency<select value={opening.currency} onChange={e => setOpening({ ...opening, currency: e.target.value })}>{["USD", "INR", "GBP", "EUR", "CAD", "SGD", "AUD", "AED"].map(code => <option key={code}>{code}</option>)}</select></label><label>Effective from<input type="date" value={opening.effective_from} onChange={e => setOpening({ ...opening, effective_from: e.target.value })} required /></label></div>
         <label>Status<select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}><option value="active">Active</option><option value="on_leave">On leave</option></select></label>
+        {error && <p className="form-error" role="alert">{error}</p>}
         <button className="primary-button" disabled={saving}>{saving ? "Creating…" : "Create employee"}</button>
       </form>
     </aside></div>}
