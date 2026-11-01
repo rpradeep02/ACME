@@ -16,4 +16,5 @@ group :development, :test do
   gem "debug", platforms: %i[mri windows]
   gem "brakeman", "~> 7.1"
   gem "bundler-audit", "~> 0.9"
+  gem "bullet", "~> 7.1"
 end

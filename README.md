@@ -100,7 +100,7 @@ This is an assessment-grade product foundation, not a certified payroll processo
 
 - **Background processing:** Active Job is backed by Sidekiq. Run Redis and `bundle exec sidekiq -C config/sidekiq.yml` alongside the web process. Dashboard cache refreshes are queued after employee and salary mutations.
 - **Caching:** Dashboard aggregates are cached in Redis for two minutes and explicitly invalidated after successful writes. Development and test use an in-memory cache.
-- **Query efficiency:** dashboard totals are calculated with grouped SQL aggregates; employee list pages preload only the current salary association, while the detail endpoint loads salary history intentionally.
+- **Query efficiency:** dashboard totals are calculated with grouped SQL aggregates; employee list pages preload only the current salary association, while the detail endpoint loads salary history intentionally. Bullet detects N+1 queries in development/test and raises in tests.
 - **Abuse protection:** Rack::Attack throttles session creation by client IP.
 - **Data integrity:** database indexes, foreign keys, check constraints, transactional salary changes, and immutable employee identifiers complement model validations.
 

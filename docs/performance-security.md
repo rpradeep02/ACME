@@ -20,3 +20,8 @@
 ## Gaps before production
 
 The assessment implementation uses one HR role and a self-managed JWT. Real payroll use requires OIDC/SSO, MFA, least-privilege salary scopes, tested token revocation, field-level access policy, encryption-at-rest verification, key rotation, database backups/restore drills, audit immutability, dependency scanning, penetration testing, observability and jurisdiction-specific privacy/compliance approval.
+
+
+## N+1 query detection
+
+Bullet is enabled in development and test. In test it raises on detected N+1 queries; in development it displays a diagnostic footer. This complements explicit association preloading in employee list/detail endpoints and grouped SQL in dashboard aggregates. Treat new Bullet warnings as regressions and fix the query shape rather than silencing them unless the preload is demonstrably unnecessary.
