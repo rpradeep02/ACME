@@ -7,6 +7,7 @@ Rails.application.configure do
   config.cache_classes = true
   config.active_support.deprecation = :stderr
   config.active_job.queue_adapter = :test
+  config.cache_store = :memory_store
   config.secret_key_base = "test-secret-key-base-for-acme-payroll-test-only"
   config.action_dispatch.show_exceptions = :none
 end

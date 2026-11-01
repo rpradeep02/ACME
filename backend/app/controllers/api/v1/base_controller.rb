@@ -43,6 +43,11 @@ module Api
         payload
       end
 
+      def refresh_dashboard_async
+        DashboardSnapshot.expire!
+        DashboardCacheRefreshJob.perform_later
+      end
+
       def audit!(action, record, metadata = {})
         AuditEvent.create!(user: current_user, action: action, auditable: record, metadata: metadata)
       end

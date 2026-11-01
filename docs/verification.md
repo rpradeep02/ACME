@@ -19,3 +19,7 @@ The environment did not have Rails or the application gems installed, and reques
 No `Gemfile.lock` or `package-lock.json` could be generated in this environment. Generate and commit both from a network-enabled development machine before treating dependency resolution as reproducible. Resolve any integration/type-check issues surfaced by those commands before submission.
 
 The app has not been deployed and no video has been recorded: those steps require the submitter's hosting/repository accounts, secrets and screen-recording environment. See `deployment.md` and `demo-script.md`.
+
+## Additional Rails hardening (follow-up)
+
+Added Sidekiq via Active Job, Redis-backed production cache configuration, a cached dashboard snapshot service, asynchronous cache refresh, Rack::Attack login throttling, and a scoped current-salary preload for employee index responses. Added focused tests for dashboard aggregation and cache invalidation. All Ruby files pass `ruby -c`; dependency installation and runtime Rails tests still need to be executed in an environment with Ruby gems and Redis available. Do not claim the full suite passed until `bundle exec rails test` completes successfully.

@@ -10,6 +10,7 @@ class CreateSalaryRecords < ActiveRecord::Migration[7.1]
     end
     add_index :salary_records, %i[employee_id effective_from], unique: true
     add_index :salary_records, %i[currency effective_from effective_to], name: "idx_salary_currency_dates"
+    add_index :salary_records, %i[employee_id effective_from effective_to], name: "idx_salary_employee_effective_period"
     add_check_constraint :salary_records, "annual_salary > 0", name: "salary_records_positive_amount"
     add_check_constraint :salary_records, "length(currency) = 3", name: "salary_records_currency_length"
   end

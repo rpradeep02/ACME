@@ -94,3 +94,25 @@ The repository is ready to deploy but is not deployed from this workspace. See [
 ## Important assessment caveats
 
 This is an assessment-grade product foundation, not a certified payroll processor. It deliberately does not calculate statutory deductions, taxes, exchange rates, payslips, bank transfers, or country-specific compliance. Those require validated jurisdictional rules and specialist review. A production rollout also needs organization-specific identity provider integration, formal role administration, security review, backups, monitoring, and a privacy/legal assessment.
+
+
+## Production-minded Rails implementation
+
+- **Background processing:** Active Job is backed by Sidekiq. Run Redis and `bundle exec sidekiq -C config/sidekiq.yml` alongside the web process. Dashboard cache refreshes are queued after employee and salary mutations.
+- **Caching:** Dashboard aggregates are cached in Redis for two minutes and explicitly invalidated after successful writes. Development and test use an in-memory cache.
+- **Query efficiency:** dashboard totals are calculated with grouped SQL aggregates; employee list pages preload only the current salary association, while the detail endpoint loads salary history intentionally.
+- **Abuse protection:** Rack::Attack throttles session creation by client IP.
+- **Data integrity:** database indexes, foreign keys, check constraints, transactional salary changes, and immutable employee identifiers complement model validations.
+
+### Run background services
+
+Start Redis (`redis-server`), then in separate terminals run `bundle exec rails server` and `bundle exec sidekiq -C config/sidekiq.yml`. Set `REDIS_URL` in the environment.
+
+### Start the complete local stack
+
+```bash
+cp backend/.env.example backend/.env # reference only; export the values in your shell/compose environment
+SEED_ADMIN_PASSWORD='use-a-local-strong-password' docker compose up --build
+```
+
+Docker Compose starts PostgreSQL-free local SQLite API, Redis, Sidekiq worker, and Vite frontend. The sample seed login is `hr.manager@acme.example`; use the `SEED_ADMIN_PASSWORD` value supplied to Compose. Change it before any shared deployment. For production, use PostgreSQL and managed Redis, and do not expose the development Sidekiq UI.
