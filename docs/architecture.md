@@ -39,11 +39,11 @@ Use PostgreSQL in production, HTTPS, strong `SECRET_KEY_BASE`, a rotated seed/ad
 ## Runtime performance and background work
 
 - Dashboard reads use `DashboardSnapshot`, which performs grouped SQL aggregates and caches the result for two minutes. The cache is private to the authenticated application and is explicitly expired after successful employee or salary mutations.
-- `DashboardCacheRefreshJob` refreshes the snapshot asynchronously on the low-priority Sidekiq queue. Redis is shared by the web and worker processes in production; development/test use local memory caches for simple setup.
+- Dashboard cache invalidation is synchronous and cheap; the next dashboard read recomputes the snapshot on a cache miss. The web process does not depend on a worker or Redis.
 - Employee index responses preload the scoped `current_salary_record` association, not the entire salary history. Employee detail responses preload both the history and current record because the UI explicitly requests history.
-- `Rack::Attack` throttles login attempts per IP. Production Redis should be used as the shared throttle/cache store when running multiple web instances.
+- `Rack::Attack` throttles login attempts per IP using the configured Rails cache. Configure `CACHE_REDIS_URL` when multiple web instances need shared cache/throttle state.
 - The dashboard uses SQL `GROUP BY` and `SUM`/`COUNT`; it never adds unlike currencies together or converts using an unstated exchange rate.
 
 ## Operational topology
 
-The production topology is a Rails/Puma web process, PostgreSQL, Redis, and one or more Sidekiq worker processes. Run the worker with `bundle exec sidekiq -C config/sidekiq.yml`. Configure `REDIS_URL`, `DATABASE_URL`, `SECRET_KEY_BASE`, and a strong `SEED_ADMIN_PASSWORD` outside source control. The Sidekiq Web UI is mounted only in development; if enabled in a production environment later, it must be protected by authenticated admin authorization.
+The production topology is a Rails/Puma web process and PostgreSQL. A shared Redis cache is optional when deploying multiple web instances. Configure `DATABASE_URL`, `SECRET_KEY_BASE`, and a strong `SEED_ADMIN_PASSWORD` outside source control. If future product requirements introduce background work, add a worker only for a concrete workload and make the web path independent of it.

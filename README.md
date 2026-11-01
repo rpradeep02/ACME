@@ -15,50 +15,67 @@ A focused, full-stack salary management application for an HR Manager overseeing
 - Rails Minitest and React/Vitest tests.
 - Dockerfiles, compose setup, CI workflow and design artifacts.
 
-## Local setup
+## Run the complete app (recommended)
 
-Prerequisites: Ruby 3.2+, Bundler, Node 20+, npm.
+Prerequisites: Docker Desktop with Docker Compose, and an internet connection for the first image/dependency download.
 
-### 1. Start the API
+From the repository root:
 
 ```bash
-cd backend
-bundle install
-bin/rails db:prepare
-bin/rails db:seed
-bin/rails server -p 3000
+docker compose up --build
 ```
 
-Demo credentials (development only):
+Wait for the API health check to pass, then open <http://localhost:5173>. The API is available at <http://localhost:3000> and its health endpoint is <http://localhost:3000/up>. Compose installs the Ruby and Node dependencies, prepares the database, seeds the 10,000-employee demo dataset, and starts both servers. The SQLite database is stored in the backend `storage/` directory and survives container restarts.
+
+Demo credentials (local development only):
 
 - Email: `hr.manager@acme.example`
 - Password: `ChangeMe123!`
 
-The backend does not auto-load `.env` files. Set `SEED_ADMIN_PASSWORD` in your shell before seeding to use a different password. Never use the development default in a deployed environment.
+Override the demo password before starting the stack:
 
-### 2. Start the React app
+```bash
+SEED_ADMIN_PASSWORD='use-a-strong-local-password' docker compose up --build
+```
 
-In a second terminal:
+Stop the stack with `Ctrl+C`; use `docker compose down` to remove containers. To reset the local database and reseed from scratch, run:
+
+```bash
+docker compose run --rm api bundle exec rails db:drop db:create db:migrate db:seed
+```
+
+### Run without Docker
+
+Prerequisites: Ruby 3.2+, Bundler, Node 20+, npm.
+
+Terminal 1:
+
+```bash
+cd backend
+bundle install
+mkdir -p storage
+bin/rails db:prepare db:seed
+bin/rails server -p 3000
+```
+
+Terminal 2:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Open <http://localhost:5173>. The API defaults to <http://localhost:3000>.
+Open <http://localhost:5173>.
 
-### 3. Run tests
+### Tests and production build
 
 ```bash
-(cd backend && bin/rails test)
-(cd frontend && npm test)
+(cd backend && bundle exec rails test)
+(cd frontend && npm test && npm run build)
 ```
 
-### 4. Seed data
-
-`bin/rails db:seed` is idempotent for the HR account and employees. It creates `EMP00001` through `EMP10000`, with deterministic identities, countries, departments, and one opening salary record per employee. To rebuild a disposable local database from scratch, run `bin/rails db:drop db:create db:migrate db:seed`.
+The seed is deterministic and idempotent. It creates `EMP00001` through `EMP10000`, with one opening salary record per employee. Seeding does not delete existing application data.
 
 ## Core API
 
@@ -77,10 +94,6 @@ All endpoints except sign-in require `Authorization: Bearer <token>`.
 
 Pagination parameters: `page`, `per_page` (maximum 100). Filters: `q`, `country_code`, `department`, `status`, `currency`.
 
-## Deployment notes
-
-The repository is ready to deploy but is not deployed from this workspace. See [`docs/deployment.md`](docs/deployment.md) for the recommended Render + managed PostgreSQL + static React deployment, production environment variables, and smoke checks. A real deployment requires an account, repository access, secrets, and domain/hosting configuration.
-
 ## Product and engineering artifacts
 
 - [`docs/requirements.md`](docs/requirements.md) — one-page product requirements.
@@ -98,21 +111,13 @@ This is an assessment-grade product foundation, not a certified payroll processo
 
 ## Production-minded Rails implementation
 
-- **Background processing:** Active Job is backed by Sidekiq. Run Redis and `bundle exec sidekiq -C config/sidekiq.yml` alongside the web process. Dashboard cache refreshes are queued after employee and salary mutations.
-- **Caching:** Dashboard aggregates are cached in Redis for two minutes and explicitly invalidated after successful writes. Development and test use an in-memory cache.
-- **Query efficiency:** dashboard totals are calculated with grouped SQL aggregates; employee list pages preload only the current salary association, while the detail endpoint loads salary history intentionally. Bullet detects N+1 queries in development/test and raises in tests.
-- **Abuse protection:** Rack::Attack throttles session creation by client IP.
+- **No infrastructure trap:** the default app uses Rails' in-process Active Job adapter and memory cache. The dashboard and employee workflows do not require Redis or a Sidekiq worker to boot or run.
+- **Optional scale-out:** set `CACHE_REDIS_URL` to share dashboard and rate-limit cache across multiple web instances. These are deployment options, not local prerequisites.
+- **Caching:** dashboard aggregates are cached for two minutes and invalidated after successful writes. A cache miss recomputes the grouped SQL snapshot.
+- **Query efficiency:** dashboard totals use grouped SQL aggregates; employee list pages preload only the current salary association, while detail views load salary history intentionally. Bullet detects N+1 queries in development/test and raises in tests.
+- **Abuse protection:** Rack::Attack throttles session creation by client IP using the configured Rails cache.
 - **Data integrity:** database indexes, foreign keys, check constraints, transactional salary changes, and immutable employee identifiers complement model validations.
 
-### Run background services
+## Deployment notes
 
-Start Redis (`redis-server`), then in separate terminals run `bundle exec rails server` and `bundle exec sidekiq -C config/sidekiq.yml`. Set `REDIS_URL` in the environment.
-
-### Start the complete local stack
-
-```bash
-cp backend/.env.example backend/.env # reference only; export the values in your shell/compose environment
-SEED_ADMIN_PASSWORD='use-a-local-strong-password' docker compose up --build
-```
-
-Docker Compose starts PostgreSQL-free local SQLite API, Redis, Sidekiq worker, and Vite frontend. The sample seed login is `hr.manager@acme.example`; use the `SEED_ADMIN_PASSWORD` value supplied to Compose. Change it before any shared deployment. For production, use PostgreSQL and managed Redis, and do not expose the development Sidekiq UI.
+The repository is ready to deploy but is not deployed from this workspace. See [`docs/deployment.md`](docs/deployment.md) for the recommended Render + managed PostgreSQL + static React deployment, production environment variables, and smoke checks. A real deployment requires an account, repository access, secrets, and hosting configuration.

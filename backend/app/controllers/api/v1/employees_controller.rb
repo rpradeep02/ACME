@@ -43,7 +43,7 @@ module Api
           audit!("employee_created", employee, employee_code: employee.employee_code)
           audit!("salary_created", record, employee_code: employee.employee_code, currency: record.currency)
         end
-        refresh_dashboard_async
+        invalidate_dashboard_cache!
         render json: serialize_employee(employee.reload, include_history: true), status: :created
       rescue ActiveRecord::RecordInvalid => e
         render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
@@ -55,7 +55,7 @@ module Api
           employee.update!(employee_update_params)
           audit!("employee_updated", employee, changed_fields: employee.previous_changes.keys - %w[updated_at])
         end
-        refresh_dashboard_async
+        invalidate_dashboard_cache!
         render json: serialize_employee(employee.reload)
       rescue ActiveRecord::RecordInvalid => e
         render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity

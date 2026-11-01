@@ -2,19 +2,19 @@
 
 ## Checks completed in the authoring environment
 
-- Ruby parser accepted every `.rb` file (`ruby -c`).
-- TypeScript compiler transpilation accepted every `.ts`/`.tsx` source file for syntax. This is not a full type-check.
-- Currency/date/initials/local-date utility functions passed direct Node smoke checks.
-- JSON manifests and YAML configuration files parsed successfully.
-- Git working tree is clean and the repository contains incremental commits.
+- Ruby parser accepted all 39 Ruby files (`ruby -c`).
+- Docker Compose, CI, and database YAML files parsed successfully.
+- Frontend `package.json` parsed successfully.
+- `git diff --check` passed.
+- Added an unauthenticated `/up` health-check integration test for the API.
 
 ## Checks not completed here
 
-The environment did not have Rails or the application gems installed, and requests to the RubyGems/NPM registries failed with DNS/network errors. Therefore these commands were **not** run successfully here:
+This environment has no Docker executable and no Rails gems / Bundler executable installed. An `npm install` attempt timed out while reaching the package registry, so frontend dependencies are also unavailable. Therefore the following were **not** run successfully here:
 
-- `cd backend && bundle install && bin/rails db:prepare && bin/rails test`
-- `cd frontend && npm install && npm test && npm run build`
-- Browser end-to-end verification against the running API.
+- `docker compose up --build` and browser smoke test.
+- `cd backend && bundle install && bin/rails db:prepare && bin/rails test`.
+- `cd frontend && npm install && npm test && npm run build`.
 
 No `Gemfile.lock` or `package-lock.json` could be generated in this environment. Generate and commit both from a network-enabled development machine before treating dependency resolution as reproducible. Resolve any integration/type-check issues surfaced by those commands before submission.
 
@@ -22,4 +22,9 @@ The app has not been deployed and no video has been recorded: those steps requir
 
 ## Additional Rails hardening (follow-up)
 
-Added Sidekiq via Active Job, Redis-backed production cache configuration, a cached dashboard snapshot service, asynchronous cache refresh, Rack::Attack login throttling, and a scoped current-salary preload for employee index responses. Added focused tests for dashboard aggregation and cache invalidation. All Ruby files pass `ruby -c`; dependency installation and runtime Rails tests still need to be executed in an environment with Ruby gems and Redis available. Do not claim the full suite passed until `bundle exec rails test` completes successfully.
+Added a cached dashboard snapshot service, synchronous cache invalidation, Rack::Attack login throttling, and a scoped current-salary preload for employee index responses. Added focused tests for dashboard aggregation and cache invalidation. Ruby syntax checks pass; dependency installation and runtime Rails tests still need to be executed in an environment with the project gems available. Do not claim the full suite passed until `bundle exec rails test` completes successfully.
+
+
+## Startup simplification (2026-11-02)
+
+The default local stack does not require Redis or a background worker. Rails uses its in-process Active Job adapter and memory cache; an optional shared Redis cache can be configured for multi-instance deployments. Docker Compose starts only the API and Vite frontend, waits for the API health endpoint before starting the frontend, and prepares/seeds the local SQLite database.

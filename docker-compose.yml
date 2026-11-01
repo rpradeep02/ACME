@@ -1,44 +1,30 @@
 services:
-  redis:
-    image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    volumes:
-      - redis_data:/data
-
   api:
-    build: ./backend
+    build:
+      context: ./backend
     environment:
       RAILS_ENV: development
       FRONTEND_ORIGIN: http://localhost:5173
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe123!}
-      REDIS_URL: redis://redis:6379/0
     ports:
       - "3000:3000"
     volumes:
       - ./backend:/app
       - bundle_cache:/usr/local/bundle
-    command: bash -lc "bundle exec rails db:prepare db:seed && bundle exec puma -C config/puma.rb"
-    depends_on:
-      redis:
-        condition: service_healthy
-
-  worker:
-    build: ./backend
-    environment:
-      RAILS_ENV: development
-      REDIS_URL: redis://redis:6379/0
-    volumes:
-      - ./backend:/app
-      - bundle_cache:/usr/local/bundle
-    command: bundle exec sidekiq -C config/sidekiq.yml
-    depends_on:
-      redis:
-        condition: service_healthy
+    command: >
+      bash -lc "mkdir -p storage && bundle exec rails db:prepare db:seed &&
+      bundle exec puma -C config/puma.rb"
+    healthcheck:
+      test:
+        - CMD
+        - ruby
+        - -rnet/http
+        - -e
+        - "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')).is_a?(Net::HTTPSuccess) ? 0 : 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
 
   web:
     image: node:22-alpine
@@ -50,11 +36,11 @@ services:
       VITE_API_BASE_URL: http://localhost:3000
     ports:
       - "5173:5173"
-    command: sh -lc "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -lc "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --strictPort"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   bundle_cache:
   node_modules:
-  redis_data:

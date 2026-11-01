@@ -9,6 +9,6 @@ Rails.application.configure do
   config.log_tags = [:request_id]
   config.logger = ActiveSupport::Logger.new($stdout)
   config.secret_key_base = ENV.fetch("SECRET_KEY_BASE")
-  config.force_ssl = true
+  config.force_ssl = ENV.fetch("FORCE_SSL", "true") == "true"
   config.active_record.dump_schema_after_migration = false
 end

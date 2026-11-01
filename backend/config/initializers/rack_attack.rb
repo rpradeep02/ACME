@@ -1,5 +1,5 @@
 class Rack::Attack
-  # Share throttling state across app instances in production; local cache in dev/test.
+  # Uses the configured Rails cache; Redis can be enabled for multi-instance deployments.
   Rack::Attack.cache.store = Rails.cache
 
   # Protect credential endpoints from brute-force attempts. Keyed by IP so

@@ -43,9 +43,8 @@ module Api
         payload
       end
 
-      def refresh_dashboard_async
+      def invalidate_dashboard_cache!
         DashboardSnapshot.expire!
-        DashboardCacheRefreshJob.perform_later
       end
 
       def audit!(action, record, metadata = {})

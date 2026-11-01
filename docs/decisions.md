@@ -21,9 +21,9 @@
 
 ## Caching and asynchronous work
 
-The dashboard is an aggregate read model, so a short-lived Redis cache avoids repeating the same grouped SQL on every HR page load. Successful employee/salary writes invalidate the snapshot and enqueue a low-priority Sidekiq refresh. The request path does not wait for the aggregate refresh. The next read can rebuild the cache if the worker is delayed. A two-minute TTL is a safety net for missed invalidations. Development and production use shared Redis so web and worker processes see the same cache; tests use memory cache for deterministic isolation.
+The dashboard is an aggregate read model, so a short-lived Rails cache avoids repeating grouped SQL on every page load. Successful employee/salary writes invalidate the snapshot; the next read rebuilds it on a cache miss. The default uses an in-process memory cache so the application starts without Redis. Multi-instance deployments can configure a shared cache with `CACHE_REDIS_URL`.
 
-Sidekiq is used through Active Job to keep job callers framework-agnostic. The sample background job refreshes an aggregate snapshot; real integrations such as payroll-provider exports or notification delivery should also be idempotent, retry-safe, and observable before production use.
+Background processing is deliberately excluded from the assessment runtime. Add a worker only when a real asynchronous workload exists; the web application must not depend on it for core HR workflows.
 
 ## Query shape
 
