@@ -25,7 +25,7 @@ module AcmePayroll
         connect_timeout: 1, read_timeout: 1, write_timeout: 1
       }
     else
-      config.cache_store = :memory_store, { size: 64.megabytes }
+      config.cache_store = :memory_store, { size: 64 * 1024 * 1024 }
     end
     config.filter_parameters += %i[password password_confirmation authorization]
   end

@@ -1,6 +1,6 @@
 # Deployment guide
 
-The source is containerizable and configured to use PostgreSQL when `DATABASE_URL` is present. A practical assessment deployment is:
+The application is deployed as two services: a Rails API and a React static site. The local development workflow does not require Docker. The backend is configured to use PostgreSQL when `DATABASE_URL` is present. A practical assessment deployment is:
 
 1. Push the repository to a GitHub repository.
 2. Provision managed PostgreSQL (Render, Railway, or equivalent).

@@ -1,30 +1,56 @@
 # Verification status for this delivery
 
+## Local setup reported by the submitter
+
+The submitter successfully prepared the Rails development database on Windows using Bundler and Rails commands, without Docker. During setup, two Windows compatibility issues were identified and addressed in the source: the memory-cache size is expressed as an integer byte count rather than relying on `Integer#megabytes`, and `tzinfo-data` is included so TZInfo has time-zone data on Windows.
+
+PowerShell may block the `npm.ps1` shim under restrictive execution policies even when Node.js is installed. In that situation, use `npm.cmd install`, `npm.cmd run dev`, `npm.cmd test` and `npm.cmd run build`. This avoids changing the machine execution policy.
+
+## Reproducible local startup
+
+Backend, from `backend/`:
+
+```powershell
+bundle install
+bundle exec rails db:prepare
+bundle exec rails db:seed
+bundle exec rails s -p 3000
+```
+
+Frontend, from `frontend/` in a second terminal:
+
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
+
+Open <http://localhost:5173>; the API health endpoint is <http://localhost:3000/up>. Both processes must remain running.
+
 ## Checks completed in the authoring environment
 
 - Ruby parser accepted all 39 Ruby files (`ruby -c`).
-- Docker Compose, CI, and database YAML files parsed successfully.
+- CI and database YAML files parsed successfully at the time of the original implementation.
 - Frontend `package.json` parsed successfully.
-- `git diff --check` passed.
-- Added an unauthenticated `/up` health-check integration test for the API.
+- `git diff --check` passed for the original implementation.
+- An unauthenticated `/up` health-check integration test was added.
 
-## Checks not completed here
+## Checks not independently verified in this authoring environment
 
-This environment has no Docker executable and no Rails gems / Bundler executable installed. An `npm install` attempt timed out while reaching the package registry, so frontend dependencies are also unavailable. Therefore the following were **not** run successfully here:
+The authoring environment did not have the project's Ruby gems or frontend dependencies installed. Therefore it did not independently execute the complete Rails test suite, frontend test suite, frontend production build or browser end-to-end flow. The submitter's successful local database preparation is user-reported; do not interpret it as proof that every test has passed. Run the following before final assessment submission:
 
-- `docker compose up --build` and browser smoke test.
-- `cd backend && bundle install && bin/rails db:prepare && bin/rails test`.
-- `cd frontend && npm install && npm test && npm run build`.
+```bash
+# backend/
+bundle exec rails test
 
-No `Gemfile.lock` or `package-lock.json` could be generated in this environment. Generate and commit both from a network-enabled development machine before treating dependency resolution as reproducible. Resolve any integration/type-check issues surfaced by those commands before submission.
+# frontend/
+npm test
+npm run build
+```
 
-The app has not been deployed and no video has been recorded: those steps require the submitter's hosting/repository accounts, secrets and screen-recording environment. See `deployment.md` and `demo-script.md`.
+On Windows PowerShell, use `npm.cmd` for the frontend commands if `npm.ps1` is blocked.
 
-## Additional Rails hardening (follow-up)
+The application has not been deployed from this workspace and no demo video has been recorded. Those steps require the submitter's hosting/repository accounts, secrets and screen-recording environment. See `deployment.md` and `demo-script.md`.
 
-Added a cached dashboard snapshot service, synchronous cache invalidation, Rack::Attack login throttling, and a scoped current-salary preload for employee index responses. Added focused tests for dashboard aggregation and cache invalidation. Ruby syntax checks pass; dependency installation and runtime Rails tests still need to be executed in an environment with the project gems available. Do not claim the full suite passed until `bundle exec rails test` completes successfully.
+## Runtime simplification
 
-
-## Startup simplification (2026-11-02)
-
-The default local stack does not require Redis or a background worker. Rails uses its in-process Active Job adapter and memory cache; an optional shared Redis cache can be configured for multi-instance deployments. Docker Compose starts only the API and Vite frontend, waits for the API health endpoint before starting the frontend, and prepares/seeds the local SQLite database.
+The default local workflow runs the Rails API and Vite frontend directly as separate processes. Redis and a background worker are not local prerequisites. Rails uses the in-process Active Job adapter and memory cache; an optional shared Redis cache can be configured for multi-instance deployments.
